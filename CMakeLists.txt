@@ -673,8 +673,6 @@ if(WITH_TURBOJPEG)
       target_link_libraries(tjbench m)
     endif()
 
-    add_executable(tjexample tjexample.c)
-    target_link_libraries(tjexample turbojpeg)
   endif()
 
   if(ENABLE_STATIC)
@@ -696,6 +694,17 @@ if(WITH_TURBOJPEG)
     if(UNIX)
       target_link_libraries(tjbench-static m)
     endif()
+
+    add_library(turbojpeg-optmemonly-static STATIC ${JPEG_SOURCES} $<TARGET_OBJECTS:simd>
+      ${SIMD_OBJS} turbojpeg.c transupp.c jdatadst-tj.c jdatasrc-tj.c)
+      set_property(TARGET turbojpeg-optmemonly-static PROPERTY COMPILE_FLAGS
+      "-DBMP_SUPPORTED -DPPM_SUPPORTED -DOPT_MEMONLY=1")
+    if(NOT MSVC)
+      set_target_properties(turbojpeg-optmemonly-static PROPERTIES OUTPUT_NAME turbojpeg-optmemonly)
+    endif()
+
+    add_executable(tjexample tjexample.c)
+    target_link_libraries(tjexample turbojpeg)
   endif()
 endif()
 
@@ -1478,6 +1487,10 @@ if(WITH_TURBOJPEG)
     install(TARGETS turbojpeg-static EXPORT ${CMAKE_PROJECT_NAME}Targets
       INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    
+    install(TARGETS turbojpeg-optmemonly-static EXPORT ${CMAKE_PROJECT_NAME}Targets
+      INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
     if(NOT ENABLE_SHARED)
       if(GENERATOR_IS_MULTI_CONFIG)
         set(DIR "${CMAKE_CURRENT_BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}")
@@ -1509,6 +1522,7 @@ if(ENABLE_STATIC)
     install(PROGRAMS ${DIR}/jpegtran-static${EXE}
       DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME jpegtran${EXE})
   endif()
+  install(PROGRAMS  ${CMAKE_CURRENT_BINARY_DIR}/tjexample${EXE} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(TARGETS rdjpgcom wrjpgcom RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

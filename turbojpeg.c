@@ -2067,7 +2067,7 @@ bailout:
   return retval;
 }
 
-
+#ifndef OPT_MEMONLY
 DLLEXPORT unsigned char *tjLoadImage(const char *filename, int *width,
                                      int align, int *height, int *pixelFormat,
                                      int flags)
@@ -2245,3 +2245,4 @@ bailout:
   if (file) fclose(file);
   return retval;
 }
+#endif // OPT_MEMONLY

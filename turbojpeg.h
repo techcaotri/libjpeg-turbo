@@ -1567,6 +1567,7 @@ DLLEXPORT int tjDestroy(tjhandle handle);
 DLLEXPORT unsigned char *tjAlloc(int bytes);
 
 
+#ifndef OPT_MEMONLY
 /**
  * Load an uncompressed image from disk into memory.
  *
@@ -1651,6 +1652,8 @@ DLLEXPORT int tjSaveImage(const char *filename, unsigned char *buffer,
                           int width, int pitch, int height, int pixelFormat,
                           int flags);
 
+
+#endif // OPT_MEMONLY
 
 /**
  * Free an image buffer previously allocated by TurboJPEG.  You should always
