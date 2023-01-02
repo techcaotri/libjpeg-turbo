@@ -31,6 +31,38 @@ pad_number(VERSION_MINOR 3)
 pad_number(VERSION_REVISION 3)
 set(LIBJPEG_TURBO_VERSION_NUMBER ${VERSION_MAJOR}${VERSION_MINOR}${VERSION_REVISION})
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# #########################################################
+option(X64_LINUX "Build the X64_LINUX library" ON)
+option(ARM64_LINUX "Buid the ARM64_LINUX library" OFF)
+option(ARM64_QNX "Buid the ARM64_QNX library" OFF)
+option(ARM64_QUALCOMM "Buid the ARM64_QUALCOMM library" OFF)
+
+# ######### Check Arch Target ##################
+if (X64_LINUX)
+    if (USE_SNPE)
+        include(${CMAKE_SOURCE_DIR}/cmake/arch/x64LinuxSNPEConfig.cmake)
+    else ()
+        include(${CMAKE_SOURCE_DIR}/cmake/arch/x64LinuxTensorRTConfig.cmake)
+    endif ()
+endif ()
+
+if (ARM64_LINUX)
+    include(${CMAKE_SOURCE_DIR}/cmake/arch/armv8LinuxTensorRTConfig.cmake)
+endif ()
+
+if (ARM64_QNX)
+    include(${CMAKE_SOURCE_DIR}/cmake/arch/armv8QnxTensorRTConfig.cmake)
+endif ()
+
+if (ARM64_QUALCOMM)
+    include(${CMAKE_SOURCE_DIR}/cmake/arch/armv8Qcs610SNPEConfig.cmake)
+    add_compile_definitions(ARM64_QUALCOMM=TRUE)
+endif ()
+set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR}/${ARCH})
+set(CMAKE_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR}/${ARCH})
+
 # CMake 3.14 and later sets CMAKE_MACOSX_BUNDLE to TRUE by default when
 # CMAKE_SYSTEM_NAME is iOS, tvOS, or watchOS, which breaks the libjpeg-turbo
 # build.  (Specifically, when CMAKE_MACOSX_BUNDLE is TRUE, executables for
@@ -624,6 +656,16 @@ if(ENABLE_STATIC)
   endif()
 endif()
 
+if(ENABLE_OPTMEMONLY)
+  add_library(turbojpeg-optmemonly-static STATIC ${JPEG_SOURCES} $<TARGET_OBJECTS:simd>
+        ${SIMD_OBJS} turbojpeg.c transupp.c jdatadst-tj.c jdatasrc-tj.c)
+        set_property(TARGET turbojpeg-optmemonly-static PROPERTY COMPILE_FLAGS
+        "-DBMP_SUPPORTED -DPPM_SUPPORTED -DOPT_MEMONLY=1")
+  if(NOT MSVC)
+    set_target_properties(turbojpeg-optmemonly-static PROPERTIES OUTPUT_NAME turbojpeg-optmemonly)
+  endif()
+endif()
+    
 if(WITH_TURBOJPEG)
   if(ENABLE_SHARED)
     set(TURBOJPEG_SOURCES ${JPEG_SOURCES} $<TARGET_OBJECTS:simd> ${SIMD_OBJS}
@@ -693,14 +735,6 @@ if(WITH_TURBOJPEG)
     target_link_libraries(tjbench-static turbojpeg-static)
     if(UNIX)
       target_link_libraries(tjbench-static m)
-    endif()
-
-    add_library(turbojpeg-optmemonly-static STATIC ${JPEG_SOURCES} $<TARGET_OBJECTS:simd>
-      ${SIMD_OBJS} turbojpeg.c transupp.c jdatadst-tj.c jdatasrc-tj.c)
-      set_property(TARGET turbojpeg-optmemonly-static PROPERTY COMPILE_FLAGS
-      "-DBMP_SUPPORTED -DPPM_SUPPORTED -DOPT_MEMONLY=1")
-    if(NOT MSVC)
-      set_target_properties(turbojpeg-optmemonly-static PROPERTIES OUTPUT_NAME turbojpeg-optmemonly)
     endif()
 
     add_executable(tjexample tjexample.c)
@@ -1468,6 +1502,13 @@ endif()
 
 set(EXE ${CMAKE_EXECUTABLE_SUFFIX})
 
+message("TriPham CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR}")
+if(ENABLE_OPTMEMONLY)
+  install(TARGETS turbojpeg-optmemonly-static EXPORT ${CMAKE_PROJECT_NAME}Targets
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+
 if(WITH_TURBOJPEG)
   if(ENABLE_SHARED)
     install(TARGETS turbojpeg EXPORT ${CMAKE_PROJECT_NAME}Targets
@@ -1488,9 +1529,6 @@ if(WITH_TURBOJPEG)
       INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
     
-    install(TARGETS turbojpeg-optmemonly-static EXPORT ${CMAKE_PROJECT_NAME}Targets
-      INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
     if(NOT ENABLE_SHARED)
       if(GENERATOR_IS_MULTI_CONFIG)
         set(DIR "${CMAKE_CURRENT_BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}")

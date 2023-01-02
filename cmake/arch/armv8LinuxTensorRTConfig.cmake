@@ -1,0 +1,2 @@
+set(ARCH_TARGET armv8Linux)
+set(CMAKE_SYSTEM_PROCESSOR "aarch64")
