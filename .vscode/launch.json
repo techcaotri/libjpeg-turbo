@@ -29,8 +29,8 @@
             "name": "tjexample",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/tjexample",
-            "args": ["~/Pictures/sample_1280×853_NEW.bmp", "./sample.jpg"],
+            "program": "${workspaceFolder}/build/x64Linux/tjexample",
+            "args": ["./jpeg_cmdTexture_sent_1002.jpg", "./test.bmp"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

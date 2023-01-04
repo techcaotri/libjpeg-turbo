@@ -333,7 +333,8 @@ int main(int argc, char **argv)
     if (outSubsamp < 0)
       outSubsamp = inSubsamp;
 
-    pixelFormat = TJPF_BGRX;
+    // pixelFormat = TJPF_BGRX;
+    pixelFormat = TJPF_RGBA;
     if ((imgBuf = (unsigned char *)tjAlloc(width * height *
                                            tjPixelSize[pixelFormat])) == NULL)
       THROW_UNIX("allocating uncompressed image buffer");

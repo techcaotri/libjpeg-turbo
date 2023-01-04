@@ -60,8 +60,13 @@ if (ARM64_QUALCOMM)
     include(${CMAKE_SOURCE_DIR}/cmake/arch/armv8Qcs610SNPEConfig.cmake)
     add_compile_definitions(ARM64_QUALCOMM=TRUE)
 endif ()
+
+set(ENABLE_OPTMEMONLY OFF CACHE INTERNAL "")
+
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR}/${ARCH})
+message("CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR}/${ARCH})
+message("CMAKE_INSTALL_BINDIR: ${CMAKE_INSTALL_BINDIR}")
 
 # CMake 3.14 and later sets CMAKE_MACOSX_BUNDLE to TRUE by default when
 # CMAKE_SYSTEM_NAME is iOS, tvOS, or watchOS, which breaks the libjpeg-turbo

@@ -312,7 +312,7 @@ echo "ENABLE_OPTMEMONLY: ${ENABLE_OPTMEMONLY}"
 
 OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -B ${BUILD_DIR} ${CMAKE_C_COMPILER} ${CMAKE_CXX_COMPILER}  ${BUILD_TYPE} ${ARCH} ${PLATFORM_BUILD} ${ENABLE_OPTMEMONLY} ${INSTALL_PREFIX}"
 echo cmake ${OPTS} .
-cmake --trace ${OPTS} .
+cmake ${OPTS} .
 cmake --build ${BUILD_DIR} --parallel $(($(nproc)-1)) --verbose
 if [[ $install == true ]]; then
   cmake --install ${BUILD_DIR} --verbose
