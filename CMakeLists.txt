@@ -669,6 +669,7 @@ if(ENABLE_OPTMEMONLY)
   if(NOT MSVC)
     set_target_properties(turbojpeg-optmemonly-static PROPERTIES OUTPUT_NAME turbojpeg-optmemonly)
   endif()
+  set_target_properties(turbojpeg-optmemonly-static PROPERTIES POSITION_INDEPENDENT_CODE 1)
 endif()
     
 if(WITH_TURBOJPEG)

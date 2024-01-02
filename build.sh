@@ -198,9 +198,10 @@ usage(){
   echo "\
   `basename $0` [OPTION...]
   -d, --debug; Enable debug build (default: false)
-  -a, --arch; Set target arch: x64Linux, armv8Linux, armv8Qnx, armv8Qcs610 (default: x64Linux)
-  -p, --path; Cross compile toolchain path (default: ~/middleware/DATA/SDK_NVIDIA (x64Linux, armv8Linux), ~/QCS610_standalone_sdk (armv8Qcs610), ~/middleware/DATA/QNX (armv8Qnx))
-  -o, --optmemonly; Only build the optized memory (default: false)
+  -a, --arch; Set target arch: x64Linux, armv8Linux, armv8Qnx, armv8Qcs610, armv8Android (default: x64Linux)
+  -p, --path; Cross compile toolchain path (default: ~/middleware/DATA/SDK_NVIDIA (x64Linux, armv8Linux), ~/QCS610_standalone_sdk (armv8Qcs610), ~/middleware/DATA/QNX (armv8Qnx), ~/Android/Sdk/ (armv8Android))
+  -n, --ndk_path; Path to the Android NDK (default: ~/Android/Sdk/ndk/23.1.7779620)
+  -o, --optmemonly; Only build the optimized memory (default: false)
   -i, --install; Run install step after compiling (default: false)
   -h, --help; Show help content
   " | column -t -s ";"
@@ -216,8 +217,16 @@ if [[  "$path" == "" ]]; then
     path=$HOME"/QCS610_standalone_sdk"
   elif [[ "$arch" == "armv8Qnx" ]]; then
     path=$HOME"/middleware/DATA/QNX"
+  elif [[ "$arch" == "armv8Android" ]]; then
+    path=$HOME"/Android/Sdk"
   else
     path=$HOME"/middleware/DATA/SDK_NVIDIA"
+  fi
+fi
+
+if [[  "$ndk_path" == "" ]]; then
+  if [[ "$arch" == "armv8Android" ]]; then
+    ndk_path=${path}"/ndk/23.1.7779620"
   fi
 fi
 
@@ -254,8 +263,13 @@ if [[ "$path" != "" ]]; then
       export QNX_SDK_PATH=$path
       TOOLCHAIN_PATH="-DQNX_SDK_PATH="$path
     else
-      export NVIDIA_SDK_PATH=$path
-      TOOLCHAIN_PATH="-DNVIDIA_SDK_PATH="$path
+      if [[ "$arch" == "armv8Android" ]]; then
+        export ANDROID_SDK_PATH=$path
+        TOOLCHAIN_PATH="-DANDROID_SDK_PATH="$path
+      else
+        export NVIDIA_SDK_PATH=$path
+        TOOLCHAIN_PATH="-DNVIDIA_SDK_PATH="$path
+      fi
     fi
   fi
 fi
@@ -285,15 +299,29 @@ else
       CMAKE_TOOLCHAIN_FILE=${SRC_DIR}/cmake/toolchain/armv8Qnx.cmake
       PLATFORM_BUILD="-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
     else
-      if [[ "$arch" == "x64Linux" ]]; then
-        ARCH="-DARM64_QUALCOMM=OFF -DARM64_LINUX=OFF -DX64_LINUX=ON"
+      if [[ "$arch" == "armv8Android" ]]; then
+        ADNROID_API_LV="28"
+        echo "ANDROID_SDK_PATH = ${ANDROID_SDK_PATH}"
+        ARCH="-DARM64_QUALCOMM=OFF -DARM64_LINUX=OFF -DX64_LINUX=OFF -DARM64_QNX=OFF -DARM64_ANDROID=ON"
+        CMAKE_TOOLCHAIN_FILE=${ndk_path}/build/cmake/android.toolchain.cmake
+        export ANDROID_HOME=${path}
+        export ANDROID_NDK_HOME=${ndk_path}
+        ANDROID_ABI="-DANDROID_ABI=arm64-v8a"
+        ANDROID_PLATFORM="-DANDROID_PLATFORM=${ADNROID_API_LV}"
+        ANDROID_TOOLCHAIN="-DANDROID_TOOLCHAIN=clang++"
+        ANDROID_NATIVE_API_LEVEL="-DANDROID_NATIVE_API_LEVEL=${ADNROID_API_LV}"
+        PLATFORM_BUILD="-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} ${ANDROID_ABI} ${ANDROID_TOOLCHAIN} ${ANDROID_NATIVE_API_LEVEL} ${ANDROID_PLATFORM}"
+      else
+        if [[ "$arch" == "x64Linux" ]]; then
+          ARCH="-DARM64_QUALCOMM=OFF -DARM64_LINUX=OFF -DX64_LINUX=ON -DARM64_QNX=OFF -DARM64_ANDROID=OFF"
+        fi
       fi
     fi
   fi
 fi
 
 if [[ "$optmemonly" == true ]]; then
-  ENABLE_OPTMEMONLY="-DENABLE_OPTMEMONLY=ON -DREQUIRE_SIMD=ON -DENABLE_SHARED=OFF -DENABLE_STATIC=OFF"
+  ENABLE_OPTMEMONLY="-DENABLE_OPTMEMONLY=ON -DREQUIRE_SIMD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DENABLE_SHARED=OFF -DENABLE_STATIC=OFF"
 else
   ENABLE_OPTMEMONLY=""
 fi
